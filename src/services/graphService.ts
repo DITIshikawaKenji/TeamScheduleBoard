@@ -19,6 +19,52 @@ function toGraphLocalDateTime(date: Date) {
   return `${y}-${m}-${d}T${h}:${min}:${s}`;
 }
 
+export type GraphUserProfile = {
+  displayName?: string;
+  mail?: string;
+  userPrincipalName?: string;
+};
+
+function escapeSearchText(value: string) {
+  return value
+    .replace(/\\/g, "\\\\")
+    .replace(/"/g, '\\"')
+    .trim();
+}
+
+function escapeODataString(value: string) {
+  return value.replace(/'/g, "''");
+}
+
+export async function searchUsers(
+  accessToken: string,
+  keyword: string
+): Promise<GraphUserProfile[]> {
+  const client = createGraphClient(accessToken);
+
+  const searchText = escapeSearchText(keyword);
+
+  if (!searchText) {
+    return [];
+  }
+
+  const result = await client
+    .api("/users")
+    .header("ConsistencyLevel", "eventual")
+    .query({
+      $search:
+        `"displayName:${searchText}" OR ` +
+        `"mail:${searchText}" OR ` +
+        `"userPrincipalName:${searchText}"`,
+      $select: "displayName,mail,userPrincipalName",
+      $top: "8",
+      $count: "true",
+    })
+    .get();
+
+  return result.value || [];
+}
+
 export async function getMyEvents(
   accessToken: string,
   startDate: Date,
@@ -81,14 +127,19 @@ export async function getScheduleForUser(
 
 export async function getUserProfile(
   accessToken: string,
-  mail: string
+  mailOrUserPrincipalName: string
 ) {
-  const client =
-    createGraphClient(accessToken);
+  const client = createGraphClient(accessToken);
+
+  const value = escapeODataString(
+    mailOrUserPrincipalName
+  );
 
   const result = await client
     .api("/users")
-    .filter(`mail eq '${mail}'`)
+    .filter(
+      `mail eq '${value}' or userPrincipalName eq '${value}'`
+    )
     .select(
       "displayName,mail,userPrincipalName"
     )
