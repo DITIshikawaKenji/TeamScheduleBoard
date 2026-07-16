@@ -25,8 +25,44 @@ export type GraphUserProfile = {
   userPrincipalName?: string;
 };
 
+function escapeSearchText(value: string) {
+  return value
+    .replace(/\\/g, "\\\\")
+    .replace(/"/g, '\\"')
+    .trim();
+}
+
 function escapeODataString(value: string) {
   return value.replace(/'/g, "''");
+}
+
+export async function searchUsers(
+  accessToken: string,
+  keyword: string
+): Promise<GraphUserProfile[]> {
+  const client = createGraphClient(accessToken);
+
+  const searchText = escapeSearchText(keyword);
+
+  if (!searchText) {
+    return [];
+  }
+
+  const result = await client
+    .api("/users")
+    .header("ConsistencyLevel", "eventual")
+    .query({
+      $search:
+        `"displayName:${searchText}" OR ` +
+        `"mail:${searchText}" OR ` +
+        `"userPrincipalName:${searchText}"`,
+      $select: "displayName,mail,userPrincipalName",
+      $top: "8",
+      $count: "true",
+    })
+    .get();
+
+  return result.value || [];
 }
 
 export async function getMyEvents(
