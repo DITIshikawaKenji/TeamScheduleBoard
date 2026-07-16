@@ -10,18 +10,11 @@ import {
   getMyEvents,
   getScheduleForUser,
   getUserProfile,
-  searchUsers,
 } from "./services/graphService";
 
 type DisplayUser = {
   email: string;
   displayName: string;
-};
-
-type UserCandidate = {
-  email: string;
-  displayName: string;
-  userPrincipalName: string;
 };
 
 type CalendarEvent = {
@@ -75,21 +68,6 @@ function App() {
   const [emailInput, setEmailInput] =
     useState("");
 
-  const [
-  userCandidates,
-  setUserCandidates,
-] = useState<UserCandidate[]>([]);
-
-const [
-  showUserCandidates,
-  setShowUserCandidates,
-] = useState(false);
-
-const [
-  isSearchingUsers,
-  setIsSearchingUsers,
-] = useState(false);
-
   const [message, setMessage] =
     useState("");
 
@@ -118,196 +96,83 @@ const primaryButtonStyle: CSSProperties = {
   border: "1px solid #2563eb",
   fontWeight: 600,
 };
-  useEffect(() => {
-    const saved = localStorage.getItem(
-      "teamScheduleSettings"
-    );
 
-    if (!saved) {
-      return;
-    }
+useEffect(() => {
+  const saved = localStorage.getItem(
+    "teamScheduleSettings"
+  );
 
-    const settings = JSON.parse(saved);
+  if (!saved) {
+    return;
+  }
 
-    const savedUsers =
-      settings.displayUsers || [];
+  const settings = JSON.parse(saved);
 
-    const normalizedUsers: DisplayUser[] =
-      savedUsers
-        .map((user: any) => {
-          if (typeof user === "string") {
-            return {
-              email: user,
-              displayName: user,
-            };
-          }
+  const savedUsers =
+    settings.displayUsers || [];
 
+  const normalizedUsers: DisplayUser[] =
+    savedUsers
+      .map((user: any) => {
+        if (typeof user === "string") {
           return {
-            email: user.email,
-            displayName:
-              user.displayName ||
-              user.name ||
-              user.email,
+            email: user,
+            displayName: user,
           };
-        })
-        .filter(
-          (user: DisplayUser) =>
-            user.email
-        );
+        }
 
-    setDisplayUsers(normalizedUsers);
-  }, []);
-
-  const saveSettings = (
-    users: DisplayUser[]
-  ) => {
-    localStorage.setItem(
-      "teamScheduleSettings",
-      JSON.stringify({
-        displayUsers: users,
+        return {
+          email: user.email,
+          displayName:
+            user.displayName ||
+            user.name ||
+            user.email,
+        };
       })
-    );
-  };
-
-  const signIn = async () => {
-    await instance.loginRedirect(
-      loginRequest
-    );
-  };
-
-  const signOut = async () => {
-    await instance.logoutRedirect();
-  };
-
-  const getAccessToken = async () => {
-    if (!account) {
-      throw new Error(
-        "ログインアカウントが取得できません。"
+      .filter(
+        (user: DisplayUser) =>
+          user.email
       );
-    }
 
-    const token =
-      await instance.acquireTokenSilent({
-        ...loginRequest,
-        account,
-      });
+  setDisplayUsers(normalizedUsers);
+}, []);
 
-    return token.accessToken;
-  };
+const saveSettings = (
+  users: DisplayUser[]
+) => {
+  localStorage.setItem(
+    "teamScheduleSettings",
+    JSON.stringify({
+      displayUsers: users,
+    })
+  );
+};
 
-  useEffect(() => {
-    const keyword =
-      emailInput.trim();
+const signIn = async () => {
+  await instance.loginRedirect(
+    loginRequest
+  );
+};
 
-if (
-  !account ||
-  keyword.length < 2 ||
-  keyword.includes("@")
-) {
-  setUserCandidates([]);
-  setShowUserCandidates(false);
-  return;
-}
-    let canceled = false;
+const signOut = async () => {
+  await instance.logoutRedirect();
+};
 
-    const timer =
-      window.setTimeout(
-        async () => {
-          try {
-  setIsSearchingUsers(true);
-  setShowUserCandidates(true);
+const getAccessToken = async () => {
+  if (!account) {
+    throw new Error(
+      "ログインアカウントが取得できません。"
+    );
+  }
 
   const token =
     await instance.acquireTokenSilent({
-                ...loginRequest,
-                account,
-              });
+      ...loginRequest,
+      account,
+    });
 
-            const users =
-              await searchUsers(
-                token.accessToken,
-                keyword
-              );
-
-            if (canceled) {
-              return;
-            }
-
-            const candidates =
-              users
-                .map((user) => {
-                  const email =
-                    user.mail ||
-                    user.userPrincipalName ||
-                    "";
-
-                  return {
-                    email:
-                      email.toLowerCase(),
-                    userPrincipalName:
-                      user.userPrincipalName ||
-                      email,
-                    displayName:
-                      formatDisplayName(
-                        user.displayName ||
-                          email
-                      ),
-                  };
-                })
-                .filter(
-                  (user) =>
-                    user.email &&
-                    user.email !==
-                      myEmail.toLowerCase() &&
-                    !displayUsers.some(
-                      (displayUser) =>
-                        displayUser.email ===
-                        user.email
-                    )
-                );
-
-setUserCandidates(
-  candidates
-);
-
-setShowUserCandidates(true);
-          } catch (error) {
-            console.error(error);
-
-            if (!canceled) {
-              setUserCandidates([]);
-              setShowUserCandidates(false);
-            }
-          } finally {
-            if (!canceled) {
-              setIsSearchingUsers(false);
-            }
-          }
-        },
-        300
-      );
-
-    return () => {
-      canceled = true;
-      window.clearTimeout(timer);
-    };
-  }, [
-    emailInput,
-    account,
-    instance,
-    displayUsers,
-    myEmail,
-  ]);
-
-  const selectUserCandidate = (
-    candidate: UserCandidate
-  ) => {
-    setEmailInput(candidate.email);
-    setShowUserCandidates(false);
-    setMessage(
-      `${candidate.displayName} を選択しました。`
-    );
-  };
+  return token.accessToken;
+};
 
   const addUserByEmail = async () => {
     const email =
@@ -390,7 +255,7 @@ setShowUserCandidates(true);
       console.error(error);
 
       setMessage(
-        "ユーザ名を取得できませんでした。User.ReadBasic.All の権限追加、管理者同意、再ログインを確認してください。"
+        "ユーザ名を取得できませんでした。メールアドレス、予定表共有権限、Graph権限、または再ログインを確認してください。"
       );
     }
   };
@@ -915,149 +780,21 @@ const formatEventTime = (
                   ユーザ追加
                 </h4>
 
-<div
+<input
+  value={emailInput}
+  onChange={(e) =>
+    setEmailInput(e.target.value)
+  }
+  placeholder="メールアドレス"
   style={{
-    position: "relative",
+    width: "100%",
+    boxSizing: "border-box",
+    padding: 5,
+    border: "1px solid #d1d5db",
+    borderRadius: 4,
+    fontSize: 12,
   }}
->
-  <input
-    value={emailInput}
-    onChange={(e) =>
-      setEmailInput(
-        e.target.value
-      )
-    }
-    onFocus={() => {
-      if (
-        userCandidates.length > 0
-      ) {
-        setShowUserCandidates(true);
-      }
-    }}
-    placeholder="メールアドレスまたは名前"
-    style={{
-      width: "100%",
-      boxSizing:
-        "border-box",
-      padding: 5,
-      border:
-        "1px solid #d1d5db",
-      borderRadius: 4,
-      fontSize: 12,
-    }}
-  />
-
-  {showUserCandidates && (
-    <div
-      style={{
-        position: "absolute",
-        top: 30,
-        left: 0,
-        right: 0,
-        zIndex: 1000,
-
-        background: "#ffffff",
-        border:
-          "1px solid #cbd5e1",
-        borderRadius: 4,
-        boxShadow:
-          "0 4px 10px rgba(0,0,0,0.15)",
-
-        maxHeight: 220,
-        overflowY: "auto",
-      }}
-    >
-      {isSearchingUsers ? (
-        <div
-          style={{
-            padding: 8,
-            fontSize: 12,
-            color: "#64748b",
-          }}
-        >
-          検索中...
-        </div>
-      ) : userCandidates.length ===
-        0 ? (
-        <div
-          style={{
-            padding: 8,
-            fontSize: 12,
-            color: "#64748b",
-          }}
-        >
-          候補がありません
-        </div>
-      ) : (
-        userCandidates.map(
-          (candidate) => (
-            <button
-              key={
-                candidate.email
-              }
-              type="button"
-              onClick={() =>
-                selectUserCandidate(
-                  candidate
-                )
-              }
-              style={{
-                width: "100%",
-                padding:
-                  "6px 8px",
-                border: "none",
-                borderBottom:
-                  "1px solid #e5e7eb",
-                background:
-                  "#ffffff",
-                textAlign: "left",
-                cursor:
-                  "pointer",
-              }}
-            >
-              <div
-                style={{
-                  fontSize: 12,
-                  fontWeight: 600,
-                  color:
-                    "#111827",
-                  overflow:
-                    "hidden",
-                  whiteSpace:
-                    "nowrap",
-                  textOverflow:
-                    "ellipsis",
-                }}
-              >
-                {
-                  candidate.displayName
-                }
-              </div>
-
-              <div
-                style={{
-                  fontSize: 11,
-                  color:
-                    "#64748b",
-                  overflow:
-                    "hidden",
-                  whiteSpace:
-                    "nowrap",
-                  textOverflow:
-                    "ellipsis",
-                }}
-              >
-                {
-                  candidate.email
-                }
-              </div>
-            </button>
-          )
-        )
-      )}
-    </div>
-  )}
-</div>
+/>
 
                 <button
                   onClick={addUserByEmail}
