@@ -849,31 +849,51 @@ const getCellEvents = (
         boxSizing: "border-box",
       }}
     >
- <h1
+<h1
   style={{
     margin: 0,
     padding: "7px 12px",
     marginBottom: 8,
-    fontSize: 18,
-    fontWeight: 600,
+
     background: "#2563eb",
     color: "#ffffff",
+
     borderRadius: 6,
 
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
+    position: "relative",
+
+    textAlign: "center",
+
+    fontSize: 18,
+    fontWeight: 600,
   }}
 >
-  <span>DIT Schedule Board</span>
+  DIT Schedule Board
 
   <span
     style={{
-      fontSize: 10,
-      color: "#93c5fd",
+      position: "absolute",
+
+      right: 12,
+      top: "50%",
+
+      transform:
+        "translateY(-50%)",
+
+      fontSize: 16,
+
+      color: "#bfdbfe",
+
       fontWeight: 400,
+
+      whiteSpace: "nowrap",
+
+      fontFamily:
+        "Consolas, monospace",
     }}
   >
+    BUILD_VERSION :
+    {" "}
     {__BUILD_TIME__}
   </span>
 </h1>
