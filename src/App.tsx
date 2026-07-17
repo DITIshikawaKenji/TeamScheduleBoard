@@ -1457,21 +1457,19 @@ const getCellEvents = (
                 「予定取得」を押すとスケジュールが表示されます。
               </p>
             ) : (
-              <div
-                style={{
-                  overflowX: "auto",
-                  overflowY: "auto",
-                  height:
-                    "calc(100vh - 140px)",
-                  background: "#ffffff",
-                  border:
-                    "1px solid #d1d5db",
-                  borderRadius: 6,
-                  boxShadow:
-                    "0 1px 3px rgba(0,0,0,0.08)",
-                }}
-              >
-                <table
+<div
+  style={{
+    overflowX: "auto",
+    overflowY: "auto",
+    height: "calc(100vh - 140px)",
+    background: "#ffffff",
+    border: "1px solid #d1d5db",
+    borderRadius: 6,
+    boxShadow:
+      "0 1px 3px rgba(0,0,0,0.08)",
+  }}
+>
+  <table
                   style={{
                     borderCollapse:
                       "collapse",
