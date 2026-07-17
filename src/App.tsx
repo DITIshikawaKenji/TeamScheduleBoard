@@ -680,13 +680,53 @@ setShowUserCandidates(true);
       dayNames[date.getDay()]
     })`;
   };
+const dateKeyToLocalDate = (
+  dateKey: string
+) => {
+  const [year, month, day] =
+    dateKey.split("-").map(Number);
 
-  const getDateFromEvent = (
-    event: CalendarEvent
-  ) => {
-    return event.start?.dateTime
-      ?.slice(0, 10);
-  };
+  return new Date(
+    year,
+    month - 1,
+    day
+  );
+};
+
+const isEventOnDate = (
+  event: CalendarEvent,
+  dateKey: string
+) => {
+  if (
+    !event.start?.dateTime ||
+    !event.end?.dateTime
+  ) {
+    return false;
+  }
+
+  const eventStart = new Date(
+    event.start.dateTime
+  );
+
+  const eventEnd = new Date(
+    event.end.dateTime
+  );
+
+  const dayStart =
+    dateKeyToLocalDate(dateKey);
+
+  const dayEnd =
+    new Date(dayStart);
+
+  dayEnd.setDate(
+    dayEnd.getDate() + 1
+  );
+
+  return (
+    eventStart < dayEnd &&
+    eventEnd > dayStart
+  );
+};
 
 const formatTime = (
   value?: string
@@ -722,27 +762,27 @@ const formatEventTime = (
   return `${start}-${end}`;
 };
 
-  const getCellEvents = (
-    userEmail: string,
-    dateKey: string
-  ) => {
-    const events =
-      eventsByUser[userEmail] || [];
+const getCellEvents = (
+  userEmail: string,
+  dateKey: string
+) => {
+  const events =
+    eventsByUser[userEmail] || [];
 
-    return events.filter((event) => {
-      if (event.isError) {
-        return (
-          dateKey ===
-          toDateKey(dates[0])
-        );
-      }
-
+  return events.filter((event) => {
+    if (event.isError) {
       return (
-        getDateFromEvent(event) ===
-        dateKey
+        dateKey ===
+        toDateKey(dates[0])
       );
-    });
-  };
+    }
+
+    return isEventOnDate(
+      event,
+      dateKey
+    );
+  });
+};
 
   const getStatusLabel = (
     status?: string
