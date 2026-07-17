@@ -418,6 +418,15 @@ setShowUserCandidates(true);
     );
   };
 
+  const changeWeek = (
+  newOffset: number
+) => {
+  setWeekOffset(newOffset);
+
+  // スケジュール表をクリア
+  setEventsByUser({});
+};
+
   const moveUser = (
   index: number,
   direction: "up" | "down"
@@ -1366,36 +1375,33 @@ const getCellEvents = (
                 {formatDateHeader(dates[6])}
               </span>
 
-              <button
-                onClick={() =>
-                  setWeekOffset(
-                    weekOffset - 1
-                  )
-                }
-                style={buttonStyle}
-              >
-                ← 前週
-              </button>
+<button
+  onClick={() =>
+    changeWeek(
+      weekOffset - 1
+    )
+  }
+>
+  ← 前週
+</button>
 
-              <button
-                onClick={() =>
-                  setWeekOffset(0)
-                }
-                style={buttonStyle}
-              >
-                今週
-              </button>
+<button
+  onClick={() =>
+    changeWeek(0)
+  }
+>
+  今週
+</button>
 
-              <button
-                onClick={() =>
-                  setWeekOffset(
-                    weekOffset + 1
-                  )
-                }
-                style={buttonStyle}
-              >
-                翌週 →
-              </button>
+<button
+  onClick={() =>
+    changeWeek(
+      weekOffset + 1
+    )
+  }
+>
+  翌週 →
+</button>
 
               <button
                 onClick={loadSchedule}
