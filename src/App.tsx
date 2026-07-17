@@ -46,6 +46,8 @@ type EventsByUser = {
   [userEmail: string]: CalendarEvent[];
 };
 
+declare const __BUILD_TIME__: string;
+
 function App() {
   const { instance, accounts } = useMsal();
   const account = accounts[0];
@@ -847,22 +849,34 @@ const getCellEvents = (
         boxSizing: "border-box",
       }}
     >
-      <h1
-        style={{
-          margin: 0,
-          padding: "7px 12px",
-          marginBottom: 8,
-          fontSize: 18,
-          fontWeight: 600,
-          background: "#2563eb",
-          color: "#ffffff",
-          borderRadius: 6,
-          boxShadow:
-            "0 1px 3px rgba(0,0,0,0.15)",
-        }}
-      >
-        DIT Schedule Board
-      </h1>
+ <h1
+  style={{
+    margin: 0,
+    padding: "7px 12px",
+    marginBottom: 8,
+    fontSize: 18,
+    fontWeight: 600,
+    background: "#2563eb",
+    color: "#ffffff",
+    borderRadius: 6,
+
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+  }}
+>
+  <span>DIT Schedule Board</span>
+
+  <span
+    style={{
+      fontSize: 10,
+      color: "#93c5fd",
+      fontWeight: 400,
+    }}
+  >
+    {__BUILD_TIME__}
+  </span>
+</h1>
 
       {!account ? (
         <button
