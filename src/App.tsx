@@ -1441,22 +1441,6 @@ const getCellEvents = (
   ログアウト
 </button>
             </div>
-
-            {Object.keys(eventsByUser)
-              .length === 0 ? (
-              <p
-                style={{
-                  background: "#ffffff",
-                  border:
-                    "1px solid #d1d5db",
-                  borderRadius: 6,
-                  padding: 12,
-                  color: "#374151",
-                }}
-              >
-                「予定取得」を押すとスケジュールが表示されます。
-              </p>
-            ) : (
 <div
   style={{
     overflowX: "auto",
@@ -1773,7 +1757,6 @@ marginBottom: 3,
                   </tbody>
                 </table>
               </div>
-            )}
           </div>
         </div>
       )}
