@@ -95,14 +95,23 @@ const [
   const [message, setMessage] =
     useState("");
 
+  const [loadingSchedule, setLoadingSchedule] =
+  useState(true);
+
   const [weekOffset, setWeekOffset] =
     useState(0);
 
   const [wrapText, setWrapText] =
     useState(false);
 
+  const [showLocation, setShowLocation] =
+    useState(true);
+
   const [showSidebar, setShowSidebar] =
     useState(true);
+
+  const [initialized, setInitialized] =
+    useState(false);
 
   const buttonStyle: CSSProperties = {
     border: "1px solid #cbd5e1",
@@ -120,56 +129,74 @@ const primaryButtonStyle: CSSProperties = {
   border: "1px solid #2563eb",
   fontWeight: 600,
 };
-  useEffect(() => {
-    const saved = localStorage.getItem(
-      "teamScheduleSettings"
-    );
+ useEffect(() => {
+  const saved = localStorage.getItem(
+    "teamScheduleSettings"
+  );
 
-    if (!saved) {
-      return;
-    }
+  if (!saved) {
+    setInitialized(true);
+    return;
+  }
 
-    const settings = JSON.parse(saved);
+  const settings = JSON.parse(saved);
 
-    const savedUsers =
-      settings.displayUsers || [];
+  const savedUsers =
+    settings.displayUsers || [];
 
-    const normalizedUsers: DisplayUser[] =
-      savedUsers
-        .map((user: any) => {
-          if (typeof user === "string") {
-            return {
-              email: user,
-              displayName: user,
-            };
-          }
-
+  const normalizedUsers: DisplayUser[] =
+    savedUsers
+      .map((user: any) => {
+        if (typeof user === "string") {
           return {
-            email: user.email,
-            displayName:
-              user.displayName ||
-              user.name ||
-              user.email,
+            email: user,
+            displayName: user,
           };
-        })
-        .filter(
-          (user: DisplayUser) =>
-            user.email
-        );
+        }
 
-    setDisplayUsers(normalizedUsers);
-  }, []);
-
-  const saveSettings = (
-    users: DisplayUser[]
-  ) => {
-    localStorage.setItem(
-      "teamScheduleSettings",
-      JSON.stringify({
-        displayUsers: users,
+        return {
+          email: user.email,
+          displayName:
+            user.displayName ||
+            user.name ||
+            user.email,
+        };
       })
-    );
-  };
+      .filter(
+        (user: DisplayUser) =>
+          user.email
+      );
+
+  setDisplayUsers(normalizedUsers);
+  setShowSidebar(
+    settings.showSidebar ?? true
+  );
+  setWrapText(
+    settings.wrapText ?? false
+  );
+  setShowLocation(
+    settings.showLocation ?? true
+  );
+
+  setInitialized(true);
+}, []);
+
+const saveSettings = (
+  users: DisplayUser[],
+  sidebar = showSidebar,
+  wrap = wrapText,
+  location = showLocation
+) => {
+  localStorage.setItem(
+    "teamScheduleSettings",
+    JSON.stringify({
+      displayUsers: users,
+      showSidebar: sidebar,
+      wrapText: wrap,
+      showLocation: location,
+    })
+  );
+};
 
   const signIn = async () => {
     await instance.loginRedirect(
@@ -381,7 +408,7 @@ setShowUserCandidates(true);
       ];
 
       setDisplayUsers(newUsers);
-      saveSettings(newUsers);
+saveSettings(newUsers, showSidebar, wrapText,showLocation);
 
       setEmailInput("");
 
@@ -407,7 +434,12 @@ setShowUserCandidates(true);
       );
 
     setDisplayUsers(newUsers);
-    saveSettings(newUsers);
+ saveSettings(
+  newUsers,
+  showSidebar,
+  wrapText,
+  showLocation
+);
 
     setEventsByUser((current) => {
       const copy = { ...current };
@@ -456,7 +488,12 @@ setShowUserCandidates(true);
   ];
 
   setDisplayUsers(newUsers);
-  saveSettings(newUsers);
+saveSettings(
+  newUsers,
+  showSidebar,
+  wrapText,
+  showLocation
+);
 };
 
   const dates = useMemo(() => {
@@ -538,6 +575,8 @@ setShowUserCandidates(true);
     if (!account) {
       return;
     }
+
+    setLoadingSchedule(true);
 
     setMessage(
       "予定を取得中です..."
@@ -643,14 +682,31 @@ setShowUserCandidates(true);
       setMessage(
         "予定取得が完了しました。"
       );
+
+      setLoadingSchedule(false);
+
     } catch (error) {
       console.error(error);
 
       setMessage(
         "予定取得でエラーが発生しました。"
       );
+
+      setLoadingSchedule(false);
+
     }
   };
+
+useEffect(() => {
+  if (!account || !initialized) {
+    return;
+  }
+
+  loadSchedule();
+}, [
+  account,
+  initialized,
+]);
 
   const usersForBoard = useMemo(() => {
     const users: DisplayUser[] = [];
@@ -934,10 +990,14 @@ const getCellEvents = (
             }}
           >
             <button
-              onClick={() =>
-                setShowSidebar(
-                  !showSidebar
-                )
+              onClick={() => {
+  const next =
+    !showSidebar;
+
+  setShowSidebar(next);
+
+  saveSettings(displayUsers, next, wrapText,showLocation);
+}
               }
               style={{
                 ...buttonStyle,
@@ -1003,13 +1063,13 @@ const getCellEvents = (
     position: "relative",
   }}
 >
-  <input
-    value={emailInput}
-    onChange={(e) =>
-      setEmailInput(
-        e.target.value
-      )
-    }
+<input
+  value={emailInput}
+  onChange={(e) =>
+    setEmailInput(
+      e.target.value
+    )
+  }
     onFocus={() => {
       if (
         userCandidates.length > 0
@@ -1415,6 +1475,7 @@ const getCellEvents = (
       weekOffset - 1
     )
   }
+  style={buttonStyle}
 >
   ← 前週
 </button>
@@ -1423,6 +1484,7 @@ const getCellEvents = (
   onClick={() =>
     changeWeek(0)
   }
+  style={buttonStyle}
 >
   今週
 </button>
@@ -1433,6 +1495,7 @@ const getCellEvents = (
       weekOffset + 1
     )
   }
+  style={buttonStyle}
 >
   翌週 →
 </button>
@@ -1454,17 +1517,54 @@ const getCellEvents = (
                   color: "#374151",
                 }}
               >
-                <input
-                  type="checkbox"
-                  checked={wrapText}
-                  onChange={(e) =>
-                    setWrapText(
-                      e.target.checked
-                    )
-                  }
-                />
-                折り返し表示
-              </label>
+  <input
+    type="checkbox"
+    checked={wrapText}
+    onChange={(e) => {
+      const next =
+        e.target.checked;
+
+      setWrapText(next);
+
+      saveSettings(
+        displayUsers,
+        showSidebar,
+        next,
+        showLocation
+      );
+    }}
+  />
+  折り返し表示
+</label>
+<label
+  style={{
+    marginLeft: 8,
+    fontSize: 12,
+    display: "flex",
+    alignItems: "center",
+    gap: 4,
+    color: "#374151",
+  }}
+>
+  <input
+    type="checkbox"
+    checked={showLocation}
+    onChange={(e) => {
+      const next =
+        e.target.checked;
+
+      setShowLocation(next);
+
+      saveSettings(
+        displayUsers,
+        showSidebar,
+        wrapText,
+        next
+      );
+    }}
+  />
+  場所表示
+</label>
 <button
   onClick={signOut}
   style={{
@@ -1475,18 +1575,32 @@ const getCellEvents = (
   ログアウト
 </button>
             </div>
-<div
-  style={{
-    overflowX: "auto",
-    overflowY: "auto",
-    height: "calc(100vh - 140px)",
-    background: "#ffffff",
-    border: "1px solid #d1d5db",
-    borderRadius: 6,
-    boxShadow:
-      "0 1px 3px rgba(0,0,0,0.08)",
-  }}
->
+{loadingSchedule ? (
+  <div
+    style={{
+      background: "#ffffff",
+      border: "1px solid #d1d5db",
+      borderRadius: 6,
+      padding: 20,
+      textAlign: "center",
+      color: "#374151",
+    }}
+  >
+    予定を取得中です...
+  </div>
+) : (
+  <div
+    style={{
+      overflowX: "auto",
+      overflowY: "auto",
+      height: "calc(100vh - 140px)",
+      background: "#ffffff",
+      border: "1px solid #d1d5db",
+      borderRadius: 6,
+      boxShadow:
+        "0 1px 3px rgba(0,0,0,0.08)",
+    }}
+  >
   <table
                   style={{
                     borderCollapse:
@@ -1747,7 +1861,7 @@ marginBottom: 3,
                                                 {fullTitle}
                                               </div>
 
-                                              {fullLocation && (
+                                              {showLocation && fullLocation && (
                                                 <div
                                                   style={{
                                                     overflow:
@@ -1791,6 +1905,7 @@ marginBottom: 3,
                   </tbody>
                 </table>
               </div>
+          )}
           </div>
         </div>
       )}
