@@ -1503,8 +1503,9 @@ const getCellEvents = (
               <button
                 onClick={loadSchedule}
                 style={primaryButtonStyle}
+                disabled={loadingSchedule}
               >
-                予定取得
+                {loadingSchedule ? "取得中..." : "予定取得"}
               </button>
 
               <label
