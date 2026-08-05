@@ -78,6 +78,7 @@ export async function getMyEvents(
     .query({
       startDateTime: startDate.toISOString(),
       endDateTime: endDate.toISOString(),
+      $top: 100,
     })
     .orderby("start/dateTime")
     .get();
