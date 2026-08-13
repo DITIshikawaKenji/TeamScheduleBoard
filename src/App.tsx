@@ -98,6 +98,8 @@ const [
   const [loadingSchedule, setLoadingSchedule] =
   useState(true);
 
+  const uiLocked = loadingSchedule;
+
   const [weekOffset, setWeekOffset] =
     useState(0);
 
@@ -452,12 +454,15 @@ saveSettings(newUsers, showSidebar, wrapText,showLocation);
     );
   };
 
-  const changeWeek = (
+const changeWeek = (
   newOffset: number
 ) => {
+  if (uiLocked) {
+    return;
+  }
+
   setWeekOffset(newOffset);
 
-  // スケジュール表をクリア
   setEventsByUser({});
 };
 
@@ -989,7 +994,7 @@ const getCellEvents = (
                 "0 1px 3px rgba(0,0,0,0.08)",
             }}
           >
-            <button
+            <button disabled={uiLocked}
               onClick={() => {
   const next =
     !showSidebar;
@@ -1475,6 +1480,7 @@ const getCellEvents = (
       weekOffset - 1
     )
   }
+  disabled={uiLocked}
   style={buttonStyle}
 >
   ← 前週
@@ -1484,6 +1490,7 @@ const getCellEvents = (
   onClick={() =>
     changeWeek(0)
   }
+  disabled={uiLocked}
   style={buttonStyle}
 >
   今週
@@ -1495,6 +1502,7 @@ const getCellEvents = (
       weekOffset + 1
     )
   }
+  disabled={uiLocked}
   style={buttonStyle}
 >
   翌週 →
